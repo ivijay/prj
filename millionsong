@@ -1,0 +1,80 @@
+/*
+ * Welcome to Mortar!
+ *
+ * STEP 1: Click ILLUSTRATE. You'll see a data sample flowing through every step of the script.
+ *
+ * STEP 2: Pull some additional data fields into the output.  Add the tempo, artist_hotness, and year fields to
+ *         the 'song_density' alias's field list and press ILLUSTRATE again.
+ *
+ * STEP 3: Try running the script against the cluster.  Click RUN, and run your job on a 2-node cluster.
+ */
+
+-- Load up one file of the million song dataset from S3 (see data spec at: http://bit.ly/vOBKPe)
+-- Note: to use the whole dataset, switch to s3n://tbmmsd/*.tsv.* and use a bigger cluster!
+songs = LOAD 's3n://tbmmsd/A.tsv.a' USING PigStorage('\t') AS (
+     track_id:chararray, analysis_sample_rate:chararray, artist_7digitalid:chararray,
+     artist_familiarity:chararray, artist_hotness:double, artist_id:chararray, artist_latitude:chararray, 
+     artist_location:chararray, artist_longitude:chararray, artist_mbid:chararray, artist_mbtags:chararray, 
+     artist_mbtags_count:chararray, artist_name:chararray, artist_playmeid:chararray, artist_terms:chararray, 
+     artist_terms_freq:chararray, artist_terms_weight:chararray, audio_md5:chararray, bars_confidence:chararray, 
+     bars_start:chararray, beats_confidence:chararray, beats_start:chararray, danceability:double, 
+     duration:float, end_of_fade_in:chararray, energy:chararray, key:chararray, key_confidence:chararray, 
+     loudness:chararray, mode:chararray, mode_confidence:chararray, release:chararray, 
+     release_7digitalid:chararray, sections_confidence:chararray, sections_start:chararray, 
+     segments_confidence:chararray, segments_loudness_max:chararray, segments_loudness_max_time:chararray, 
+     segments_loudness_max_start:chararray, segments_pitches:chararray, segments_start:chararray, 
+     segments_timbre:chararray, similar_artists:chararray, song_hotness:chararray, song_id:chararray, 
+     start_of_fade_out:chararray, tatums_confidence:chararray, tatums_start:chararray, tempo:double, 
+     time_signature:chararray, time_signature_confidence:chararray, title:chararray, track_7digitalid:chararray, 
+     year:int );
+
+-- Use FILTER to get only songs that have a duration
+filtered_songs = FILTER songs BY duration > 0;
+
+-- Use FOREACH to run calculations on every row.
+-- Here, we calculate density (sounds per second) using 
+-- the density function we wrote in python below
+song_density = FOREACH filtered_songs 
+              GENERATE artist_name, 
+                       title,
+                       density(segments_start, duration);
+
+-- Get the top 50 most dense songs
+-- by using ORDER and then LIMIT
+density_ordered = ORDER song_density BY density DESC;
+top_density     = LIMIT density_ordered 50;
+
+-- STORE the songs into S3 (results stored in the Hawk sandbox will
+-- be removed on a regular basis).
+-- We use the pig 'rmf' command to remove any
+-- existing results first
+rmf s3n://mortar-example-output-data/$MORTAR_EMAIL_S3_ESCAPED/top_density_songs;
+STORE top_density INTO 's3n://mortar-example-output-data/$MORTAR_EMAIL_S3_ESCAPED/top_density_songs' USING PigStorage('\t');
+
+----------
+
+
+python UDFS
+-------------
+
+# 
+# This is where we write python funtions that we can call from pig.
+# Pig needs to know the schema of the function, which we specify using
+# the @outputSchema decorator
+#
+@outputSchema('density:double')
+def density(segments_start, duration):
+    """
+    Calculate the density of a song.  We do this by computing the
+    number of song segments per second. 
+    """
+    # segements_start is an array of times that each sound in the song starts
+    # grab the length of it to get the number of sounds
+    num_segments = len(segments_start.split(","))
+    
+    # print the number of segments for debugging
+    # this will appear whenever we ILLUSTRATE to help us debug
+    print 'Number of segments: %s, duration: %s' % (num_segments, duration)
+    
+    # calculate the segments per second
+    return num_segments / duration
