@@ -1,0 +1,22 @@
+[12:24:00 AM] Vincent: 1. Finding and finalizing the datasets (2 datasets) – based on the criteria for Big Data Programming - Size of data, what kinds of analysis can be performed. 
+2. Creating a list of Analysis which fall in the scope of Big Data Analytics 
+
+(TOOLS & ALGORITHMS)
+1. Deciding on whether - "Programming with Big Data in R" project (pbdR) can perform all the analytics required or not – Or should we switch for Python (Pandas & SciKit)
+2. I am more confident with R – so I would like to check pbdR thoroughly and make sure we can perform all analytics with it. 
+3. Deciding the scope of MapReduce Algorithms in the chosen datasets 
+4. Gathering Java resources for MapReduce and other resources of Hadoop programming
+5. Finalizing on what analysis to be done on which Tool – (R, Hadoop)
+
+(SCRIPTING & DEBUGGING)
+1. Writing the codes in the chosen tools for each of Analytics decided in the list, compiling and running them
+2. Making sense of the results & debugging all the errors
+3. Finalizing the script codes and final outputs 
+
+(FINALIZING REPORTS & DRAFTING)
+1. Creating output reports – graphing and finalizing the reports
+2. Creating the Word Documentation – Draft 
+
+Submitting all the work files, documentation and script codes to you.
+
+www.virtual-division.com
