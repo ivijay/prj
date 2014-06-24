@@ -1,0 +1,11 @@
+collect data			datasift,
+transform
+analyze					Weka
+
+load into BI tool
+
+twitter(most viewed, Most Retweeted, Most Favorited, Top 10 Tweets, most tweeted locations, active time )
+
+
+
+http://hortonworks.com/hadoop-tutorial/how-to-refine-and-visualize-sentiment-data/
